@@ -1,0 +1,59 @@
+version: 2
+
+project_name: migraine
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/migraine
+    binary: migraine
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^test:"
+      - "^docs:"
+
+# Homebrew tap: create github.com/bSemir/homebrew-tap, add a token with
+# write access to it as HOMEBREW_TAP_TOKEN, then uncomment.
+#
+# brews:
+#   - name: migraine
+#     repository:
+#       owner: bSemir
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+#     homepage: https://github.com/bSemir/migraine
+#     description: Fix colliding SQL migration numbers after git merges and rebases
+#     license: MIT
+#     test: |
+#       system "#{bin}/migraine", "--help"

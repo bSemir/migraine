@@ -1,0 +1,42 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gocritic
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        # Struct field order follows readability, not byte savings.
+        - fieldalignment
+    revive:
+      rules:
+        - name: exported
+        - name: package-comments
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: context-as-argument
+        - name: var-naming
+        - name: receiver-naming
+        - name: indent-error-flow
+        - name: unused-parameter
+        - name: blank-imports
+        - name: increment-decrement
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/bSemir/migraine
