@@ -1,0 +1,28 @@
+# Uncommitted work counts as "ours": an untracked migration that reuses
+# a number from main is caught and fixed before it is ever committed.
+# --dir and an explicit --base are exercised along the way.
+[!exec:git] skip
+exec git init -q -b trunk
+exec git add .
+exec git commit -q -m init
+exec git checkout -q -b feature
+cp db/migrations/001_init.up.sql db/migrations/002_add_orders.up.sql
+cp db/migrations/001_init.up.sql db/migrations/003_add_items.up.sql
+
+exitcode 1 migraine check --dir db/migrations --base trunk
+cmp stdout want-check
+
+exitcode 0 migraine fix --dir db/migrations --base trunk
+exists db/migrations/003_add_orders.up.sql db/migrations/004_add_items.up.sql
+! exists db/migrations/002_add_orders.up.sql
+exists db/migrations/002_add_users.up.sql
+
+-- db/migrations/001_init.up.sql --
+-- init
+-- db/migrations/002_add_users.up.sql --
+-- users
+-- want-check --
+✗ 002 collides: add_orders (yours) vs add_users (trunk)
+  fix: 002_add_orders.up.sql -> 003_add_orders.up.sql
+  fix: 003_add_items.up.sql -> 004_add_items.up.sql
+run `migraine fix` to renumber

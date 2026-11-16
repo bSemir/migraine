@@ -1,0 +1,29 @@
+# A branch that adds the next free number has nothing to fix, whether
+# the new migration is committed or not.
+[!exec:git] skip
+exec git init -q -b main
+exec git add .
+exec git commit -q -m init
+exec git checkout -q -b feature
+
+exitcode 0 migraine check
+stdout '^✓ no collisions$'
+
+# Untracked, up-only migration.
+cp migrations/000001_init.up.sql migrations/000002_add_orders.up.sql
+exitcode 0 migraine check
+stdout '^✓ no collisions$'
+exitcode 0 migraine fix
+stdout '^✓ no collisions$'
+exists migrations/000002_add_orders.up.sql
+
+# Files outside the naming scheme are ignored with a warning.
+cp migrations/000001_init.up.sql migrations/README.md
+exitcode 0 migraine check
+stdout '^✓ no collisions$'
+stderr '^warning: ignoring "README.md": not a migration filename$'
+
+-- migrations/000001_init.up.sql --
+-- init
+-- migrations/000001_init.down.sql --
+-- init

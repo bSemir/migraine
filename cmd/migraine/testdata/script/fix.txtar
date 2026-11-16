@@ -1,0 +1,59 @@
+# Two branches each add migration 000002. The merge and the rebase both
+# succeed without a conflict because the filenames differ.
+[!exec:git] skip
+exec git init -q -b main
+exec git add .
+exec git commit -q -m init
+exec git checkout -q -b teammate
+cp sql/users.sql migrations/000002_add_users.up.sql
+cp sql/users.sql migrations/000002_add_users.down.sql
+exec git add migrations
+exec git commit -q -m users
+exec git checkout -q main
+exec git checkout -q -b feature
+cp sql/orders.sql migrations/000002_add_orders.up.sql
+cp sql/orders.sql migrations/000002_add_orders.down.sql
+exec git add migrations
+exec git commit -q -m orders
+exec git checkout -q main
+exec git merge -q teammate
+exec git checkout -q feature
+exec git rebase -q main
+exists migrations/000002_add_users.up.sql migrations/000002_add_orders.up.sql
+
+exitcode 0 migraine fix
+cmp stdout want-stdout
+! stderr .
+
+exists migrations/000003_add_orders.up.sql migrations/000003_add_orders.down.sql
+! exists migrations/000002_add_orders.up.sql
+! exists migrations/000002_add_orders.down.sql
+exists migrations/000002_add_users.up.sql migrations/000002_add_users.down.sql
+cmp migrations/000003_add_orders.up.sql sql/orders.sql
+
+# No temporary files are left behind.
+! exists migrations/.migraine-0.tmp
+
+# The tree is clean afterwards, and fixing again is a no-op.
+exitcode 0 migraine check
+stdout '^✓ no collisions$'
+exitcode 0 migraine fix
+stdout '^✓ no collisions$'
+
+# git sees plain renames, not delete + add.
+exec git add -A
+exec git status --short
+stdout 'R  migrations/000002_add_orders.up.sql -> migrations/000003_add_orders.up.sql'
+
+-- migrations/000001_init.up.sql --
+-- init
+-- migrations/000001_init.down.sql --
+-- init
+-- sql/users.sql --
+-- users
+-- sql/orders.sql --
+-- orders
+-- want-stdout --
+✗ 000002 collides: add_orders (yours) vs add_users (main)
+  renamed: 000002_add_orders.{up,down}.sql -> 000003_add_orders.{up,down}.sql
+✓ renumbered 1 migration

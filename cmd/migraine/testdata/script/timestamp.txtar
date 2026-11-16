@@ -1,0 +1,17 @@
+# Timestamp-versioned directories are refused outright rather than
+# half-understood.
+[!exec:git] skip
+exec git init -q -b main
+exec git add .
+exec git commit -q -m init
+
+exitcode 2 migraine check
+! stdout .
+stderr '^migraine: .*"20240101120000_x.sql": timestamp versions not supported in v0.1$'
+
+exitcode 2 migraine fix
+stderr 'timestamp versions not supported in v0.1'
+exists migrations/20240101120000_x.sql
+
+-- migrations/20240101120000_x.sql --
+-- x

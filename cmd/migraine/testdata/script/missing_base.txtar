@@ -1,0 +1,18 @@
+# Neither main nor master exists: say so and point at --base.
+[!exec:git] skip
+exec git init -q -b trunk
+exec git add .
+exec git commit -q -m init
+
+exitcode 2 migraine check
+! stdout .
+stderr '^migraine: resolve base: base ref not found: main or master \(try --base origin/main\)$'
+
+exitcode 2 migraine fix --base origin/main
+stderr 'base ref not found: origin/main'
+
+exitcode 0 migraine check --base trunk
+stdout '^✓ no collisions$'
+
+-- migrations/000001_init.up.sql --
+-- init

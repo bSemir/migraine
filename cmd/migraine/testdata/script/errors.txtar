@@ -1,0 +1,25 @@
+# Usage and environment errors exit with 2 and a clear message.
+[!exec:git] skip
+
+exitcode 2 migraine check
+stderr '^migraine: resolve base: not a git repository'
+
+exec git init -q -b main
+exec git add .
+exec git commit -q -m init
+
+exitcode 2 migraine check
+stderr '^migraine: .*migrations directory not found: migrations \(use --dir to point at it\)$'
+
+exitcode 2 migraine
+stderr 'missing command'
+stderr 'Usage:'
+
+exitcode 2 migraine check --dry-run
+stderr 'flag provided but not defined'
+
+exitcode 0 migraine --help
+stdout 'Usage:'
+
+-- README.md --
+no migrations here
